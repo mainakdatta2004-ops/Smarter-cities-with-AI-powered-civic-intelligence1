@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 
 // Pre-defined dataset for live feedback simulation
 const INITIAL_FEEDBACKS = [
@@ -51,6 +51,27 @@ export default function App() {
 
   // --- Refs ---
   const feedbackEndRef = useRef(null);
+
+  // --- Scroll Reveal with IntersectionObserver ---
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('visible');
+          }
+        });
+      },
+      { threshold: 0.08, rootMargin: '0px 0px -40px 0px' }
+    );
+
+    const revealElements = document.querySelectorAll('.reveal');
+    revealElements.forEach(el => observer.observe(el));
+
+    return () => {
+      revealElements.forEach(el => observer.unobserve(el));
+    };
+  }, []);
 
   // --- Simulation Effects ---
 
@@ -190,8 +211,8 @@ export default function App() {
     setNewComment('');
   };
 
-  // --- 3D Hover Tilt Effects (React Implementation) ---
-  const handleCardMouseMove = (e) => {
+  // --- 3D Hover Tilt Effects ---
+  const handleCardMouseMove = useCallback((e) => {
     const card = e.currentTarget;
     const rect = card.getBoundingClientRect();
     const x = e.clientX - rect.left;
@@ -200,12 +221,15 @@ export default function App() {
     const yc = rect.height / 2;
     const dx = (x - xc) / xc;
     const dy = (y - yc) / yc;
-    card.style.transform = `rotateY(${dx * 9}deg) rotateX(${-dy * 9}deg) translateZ(10px)`;
-  };
+    card.style.transform = `rotateY(${dx * 6}deg) rotateX(${-dy * 6}deg) translateZ(8px)`;
+    // Update CSS custom properties for radial glow following mouse
+    card.style.setProperty('--mouse-x', `${x}px`);
+    card.style.setProperty('--mouse-y', `${y}px`);
+  }, []);
 
-  const handleCardMouseLeave = (e) => {
+  const handleCardMouseLeave = useCallback((e) => {
     e.currentTarget.style.transform = 'rotateY(0deg) rotateX(0deg) translateZ(0)';
-  };
+  }, []);
 
   // --- Content Datasets ---
   const layerContent = {
@@ -255,7 +279,7 @@ export default function App() {
             </div>
 
             {trafficSpike && (
-              <p style={{ margin: 0, fontSize: '12px', color: 'var(--amber)', textAlign: 'center', fontFamily: 'JetBrains Mono, monospace' }}>
+              <p style={{ margin: 0, fontSize: '12px', color: 'var(--peach)', textAlign: 'center', fontFamily: 'JetBrains Mono, monospace' }}>
                 ⚠️ Congestion spike detected! AI recalibrating light cycles...
               </p>
             )}
@@ -277,7 +301,7 @@ export default function App() {
             
             <button 
               className="widget-btn" 
-              style={{ background: 'rgba(255,107,107,0.1)', borderColor: 'rgba(255,107,107,0.3)', color: 'var(--red)', marginTop: '8px' }}
+              style={{ background: 'rgba(252,165,165,0.08)', borderColor: 'rgba(252,165,165,0.25)', color: 'var(--red)', marginTop: '8px' }}
               onClick={triggerTrafficSpike}
               disabled={trafficSpike}
             >
@@ -302,7 +326,7 @@ export default function App() {
         <div className="widget-container">
           <div className="widget-title">
             <span>DISPATCH &amp; SECURITY CONTROLS</span>
-            <span className="status" style={{ color: ethicalPolicing ? 'var(--cyan)' : 'var(--amber)', background: ethicalPolicing ? 'var(--cyan-bg)' : 'var(--amber-bg)', borderColor: ethicalPolicing ? 'var(--cyan)' : 'var(--amber)' }}>
+            <span className="status" style={{ color: ethicalPolicing ? 'var(--lavender)' : 'var(--peach)', background: ethicalPolicing ? 'var(--lavender-bg)' : 'var(--peach-bg)', borderColor: ethicalPolicing ? 'var(--lavender)' : 'var(--peach)' }}>
               {ethicalPolicing ? 'Equitable Mode' : 'Logistics Only'}
             </span>
           </div>
@@ -316,7 +340,7 @@ export default function App() {
               <div className="bar-outer">
                 <div className="bar-inner" style={{ 
                   width: `${(dispatchTime / 8) * 100}%`,
-                  background: ethicalPolicing ? 'linear-gradient(90deg, var(--cyan), var(--purple))' : 'linear-gradient(90deg, var(--amber), var(--red))'
+                  background: ethicalPolicing ? 'linear-gradient(90deg, var(--lavender), var(--sky))' : 'linear-gradient(90deg, var(--peach), var(--red))'
                 }}></div>
               </div>
             </div>
@@ -325,7 +349,7 @@ export default function App() {
               {safetyLogs.map((log, i) => (
                 <div className="log-entry" key={i}>
                   <span className="time">[{log.time}]</span>
-                  <span className="tag" style={{ color: log.type === 'warn' ? 'var(--amber)' : log.type === 'info' ? 'var(--cyan)' : 'var(--text-lo)' }}>
+                  <span className="tag" style={{ color: log.type === 'warn' ? 'var(--peach)' : log.type === 'info' ? 'var(--lavender)' : 'var(--text-lo)' }}>
                     {log.tag}
                   </span>
                   <span className="event">{log.event}</span>
@@ -405,7 +429,7 @@ export default function App() {
             <div className="leak-detector-wave">
               <div className="wave-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <span>Acoustic Leak Detection</span>
-                <span style={{ color: leakStatus === 'detected' ? 'var(--cyan)' : leakStatus === 'scanning' ? 'var(--amber)' : 'var(--text-lo)' }}>
+                <span style={{ color: leakStatus === 'detected' ? 'var(--mint)' : leakStatus === 'scanning' ? 'var(--peach)' : 'var(--text-lo)' }}>
                   {leakStatus === 'detected' ? 'LEAK SPOTTED (SECTOR 9)' : leakStatus === 'scanning' ? 'ANALYZING...' : 'GRID IDLE'}
                 </span>
               </div>
@@ -416,18 +440,18 @@ export default function App() {
                       className="wave-line"
                       d="M0,20 Q15,0 30,20 T60,20 T90,20 T120,20 T150,20 T180,20 T210,20 T240,20 T270,20 T300,20" 
                       fill="none" 
-                      stroke="var(--amber)" 
+                      stroke="var(--peach)" 
                       strokeWidth="2"
                     />
                   ) : leakStatus === 'detected' ? (
                     <path 
                       d="M0,20 Q15,20 30,20 T60,20 T90,5 105,35 120,5 135,35 150,20 T180,20 T210,20 T240,20 T270,20 T300,20" 
                       fill="none" 
-                      stroke="var(--cyan)" 
+                      stroke="var(--mint)" 
                       strokeWidth="2"
                     />
                   ) : (
-                    <line x1="0" y1="20" x2="300" y2="20" stroke="rgba(255,255,255,0.15)" strokeWidth="2" />
+                    <line x1="0" y1="20" x2="300" y2="20" stroke="rgba(255,255,255,0.12)" strokeWidth="2" />
                   )}
                 </svg>
               </div>
@@ -572,10 +596,16 @@ export default function App() {
 
   return (
     <>
-      {/* Background Floating Orbs */}
+      {/* Ethereal Background System */}
+      <div className="ethereal-bg" />
+      <div className="aurora-band" />
+
+      {/* Floating Gradient Orbs */}
       <div className="orb orb-1"></div>
       <div className="orb orb-2"></div>
       <div className="orb orb-3"></div>
+      <div className="orb orb-4"></div>
+      <div className="orb orb-5"></div>
 
       <div className="wrap">
         {/* Navigation */}
@@ -592,15 +622,19 @@ export default function App() {
           </div>
         </nav>
 
-        {/* Hero Section */}
-        <div className="eyebrow">Spatial civic systems — 2026 concept</div>
-        <h1 class="hero">The city, rendered<br />as <em>living intelligence</em>.</h1>
-        <p className="sub">
-          A spatial computing layer for urban governance — where mobility, safety, utilities, and citizen voice are no longer separate departments, but one continuous, ambient system you can see, question, and shape in real time.
-        </p>
+        {/* ═══ HERO BENTO GRID ═══ */}
+        <div className="hero-bento reveal">
+          <div className="hero-main">
+            <div className="eyebrow">Spatial civic systems — 2026 concept</div>
+            <h1 className="hero">The city, rendered<br />as <em>living intelligence</em>.</h1>
+            <p className="sub">
+              A spatial computing layer for urban governance — where mobility, safety, utilities, and citizen voice are no longer separate departments, but one continuous, ambient system you can see, question, and shape in real time.
+            </p>
+          </div>
+        </div>
 
-        {/* Live Metrics Strip (Hero Widget) */}
-        <div className="system-monitor-hero">
+        {/* Live Metrics Strip (Bento Card) */}
+        <div className="system-monitor-hero reveal reveal-delay-1">
           <div className="monitor-item">
             <div className="val">
               <span className="status-pulse"></span>
@@ -622,21 +656,21 @@ export default function App() {
           </div>
         </div>
 
-        <div className="cta-row">
+        <div className="cta-row reveal reveal-delay-2">
           <a href="#intro" className="btn btn-primary">Read the Essay</a>
           <a href="#layers" className="btn btn-ghost">Explore Live Widgets</a>
         </div>
 
-        {/* Introduction Panel */}
-        <div className="section-header" id="intro">
+        {/* ═══ INTRODUCTION PANEL ═══ */}
+        <div className="section-header reveal" id="intro">
           <div className="section-label">01 // Orientation</div>
           <h2 className="section-title">Introduction: The Ambient City</h2>
         </div>
 
-        <div className="intro-panel">
+        <div className="intro-panel reveal">
           <div className="intro-grid">
             <div className="intro-text">
-              <p>Imagine waking up in a city that breathes with you. The streetlights outside your window dimmed hours ago, responding to empty sidewalks, yet they flare to a warm brilliance as a late-shift nurse walks home. As you step onto the electric bus, it doesn’t follow a rigid, archaic timetable; its route was dynamically optimized ten minutes ago based on a sudden surge of commuters at the local plaza. Beneath the asphalt, acoustic sensors detect a microscopic fracture in a main water pipe, automatically dispatching a maintenance crew before a single drop is wasted.</p>
+              <p>Imagine waking up in a city that breathes with you. The streetlights outside your window dimmed hours ago, responding to empty sidewalks, yet they flare to a warm brilliance as a late-shift nurse walks home. As you step onto the electric bus, it doesn't follow a rigid, archaic timetable; its route was dynamically optimized ten minutes ago based on a sudden surge of commuters at the local plaza. Beneath the asphalt, acoustic sensors detect a microscopic fracture in a main water pipe, automatically dispatching a maintenance crew before a single drop is wasted.</p>
               <p>This is not science fiction; it is the manifestation of the ambient city—an urban environment powered by <strong>Civic Intelligence</strong>. Civic intelligence represents the collective capacity of a city to sense, process, learn, and act on information to improve the shared well-being of its residents. Rather than viewing urban governance as a series of isolated bureaucratic silos, civic intelligence integrates human participation, IoT sensor networks, and artificial intelligence into a singular, responsive feedback loop.</p>
               <p>In modern urban planning, AI acts as the connective tissue of this system. By digesting millions of data points from disparate networks, AI transitions city halls from reactive fire-fighting to proactive stewardship, fundamentally redefining how cities are governed, maintained, and experienced.</p>
             </div>
@@ -649,17 +683,17 @@ export default function App() {
           </div>
         </div>
 
-        {/* Interactive 3D Windows (Layers Preview) */}
-        <div className="section-header" id="layers">
+        {/* ═══ CIVIC LAYERS — BENTO WINDOWS ═══ */}
+        <div className="section-header reveal" id="layers">
           <div className="section-label">02 // Systems Architecture</div>
           <h2 className="section-title">Four Civic Layers, One Field of View</h2>
         </div>
 
-        <p style={{ color: 'var(--text-mid)', marginBottom: '32px', maxWidth: '600px', fontSize: '15px' }}>
+        <p className="reveal" style={{ color: 'var(--text-mid)', marginBottom: '32px', maxWidth: '600px', fontSize: '15px' }}>
           Select a civic layer window below to explore its systems architecture and run its live interactive simulation dashboard.
         </p>
 
-        <div className="windows">
+        <div className="windows reveal">
           <div 
             className={`window ${activeLayer === 'mobility' ? 'active' : ''}`}
             onClick={() => setActiveLayer('mobility')}
@@ -718,7 +752,7 @@ export default function App() {
         </div>
 
         {/* Deep Dive & Simulation Panel */}
-        <div className="dashboard-display">
+        <div className="dashboard-display reveal">
           <div className="body-section">
             <div className="body-meta">
               <span className="body-icon">{layerContent[activeLayer].icon}</span>
@@ -734,21 +768,33 @@ export default function App() {
           </div>
         </div>
 
-        {/* Stats Strip */}
-        <div className="stats">
-          <div className="stat"><div className="num">23%</div><div className="label">Commute Delay Cut</div></div>
-          <div className="stat"><div className="num">1.4m</div><div className="label">Faster Emergency Dispatch</div></div>
-          <div className="stat"><div className="num">17%</div><div className="label">Outages Avoided</div></div>
-          <div className="stat"><div className="num">3.2x</div><div className="label">Citizen Engagement Boost</div></div>
+        {/* ═══ BENTO STATS GRID ═══ */}
+        <div className="stats reveal">
+          <div className="stat reveal-delay-1">
+            <div className="num">23%</div>
+            <div className="label">Commute Delay Cut</div>
+          </div>
+          <div className="stat reveal-delay-2">
+            <div className="num">1.4m</div>
+            <div className="label">Faster Emergency Dispatch</div>
+          </div>
+          <div className="stat reveal-delay-3">
+            <div className="num">17%</div>
+            <div className="label">Outages Avoided</div>
+          </div>
+          <div className="stat reveal-delay-4">
+            <div className="num">3.2x</div>
+            <div className="label">Citizen Engagement Boost</div>
+          </div>
         </div>
 
-        {/* Real-World Case Studies */}
-        <div className="section-header" id="deployments">
+        {/* ═══ CASE STUDIES ═══ */}
+        <div className="section-header reveal" id="deployments">
           <div className="section-label">03 // Field Deployments</div>
-          <h2 class="section-title">Real-World Case Studies</h2>
+          <h2 className="section-title">Real-World Case Studies</h2>
         </div>
 
-        <div className="cases-panel">
+        <div className="cases-panel reveal">
           <div className="cases-tabs">
             <button 
               className={`tab-btn ${activeCase === 'singapore' ? 'active' : ''}`}
@@ -811,13 +857,13 @@ export default function App() {
           </div>
         </div>
 
-        {/* Challenges & Criticisms */}
-        <div className="section-header" id="challenges">
+        {/* ═══ CHALLENGES — BENTO GRID ═══ */}
+        <div className="section-header reveal" id="challenges">
           <div className="section-label">04 // Risk Analysis</div>
-          <h2 class="section-title">The Shadows in the Smart City</h2>
+          <h2 className="section-title">The Shadows in the Smart City</h2>
         </div>
 
-        <div className="challenges-panel">
+        <div className="challenges-panel reveal">
           <p className="sub">
             Building a responsive city requires immense volumes of data. If implemented without boundaries, civic intelligence risks shifting from public empowerment to automated surveillance.
           </p>
@@ -857,13 +903,13 @@ export default function App() {
           </div>
         </div>
 
-        {/* The Path Forward: Layered Governance */}
-        <div className="section-header" id="governance">
+        {/* ═══ GOVERNANCE LAYERS ═══ */}
+        <div className="section-header reveal" id="governance">
           <div className="section-label">05 // Ethical Framework</div>
-          <h2 class="section-title">The Path Forward: Human-Centered AI Governance</h2>
+          <h2 className="section-title">The Path Forward: Human-Centered AI Governance</h2>
         </div>
 
-        <div className="depth-panel">
+        <div className="depth-panel reveal">
           <div className="depth-grid">
             <div>
               <h2>Responsible, Layered Governance</h2>
@@ -878,51 +924,51 @@ export default function App() {
 
             <div className="layer-stack stacked">
               <div 
-                className={`layer layer-1`} 
+                className="layer layer-1" 
                 style={{ 
-                  borderColor: activeGovLayer === 1 ? 'var(--cyan)' : 'var(--glass-border)',
-                  boxShadow: activeGovLayer === 1 ? '0 0 20px rgba(88, 214, 255, 0.3)' : '0 20px 40px -14px rgba(0,0,0,0.5)'
+                  borderColor: activeGovLayer === 1 ? 'var(--lavender)' : 'var(--glass-border)',
+                  boxShadow: activeGovLayer === 1 ? '0 0 24px rgba(167, 139, 250, 0.3)' : 'var(--shadow-soft)'
                 }}
                 onClick={() => setActiveGovLayer(1)}
               >
-                <span><span className="dot" style={{ background: 'var(--cyan)', boxShadow: '0 0 8px var(--cyan)' }}></span> Policy &amp; Governance Layer</span>
+                <span><span className="dot" style={{ background: 'var(--lavender)', boxShadow: '0 0 10px var(--lavender)' }}></span> Policy &amp; Governance Layer</span>
                 <span>human oversight</span>
               </div>
               
               <div 
-                className={`layer layer-2`}
+                className="layer layer-2"
                 style={{ 
-                  borderColor: activeGovLayer === 2 ? 'var(--amber)' : 'var(--glass-border)',
-                  boxShadow: activeGovLayer === 2 ? '0 0 20px rgba(255, 183, 101, 0.3)' : '0 20px 40px -14px rgba(0,0,0,0.5)'
+                  borderColor: activeGovLayer === 2 ? 'var(--rose)' : 'var(--glass-border)',
+                  boxShadow: activeGovLayer === 2 ? '0 0 24px rgba(240, 171, 207, 0.3)' : 'var(--shadow-soft)'
                 }}
                 onClick={() => setActiveGovLayer(2)}
               >
-                <span><span className="dot" style={{ background: 'var(--amber)', boxShadow: '0 0 8px var(--amber)' }}></span> Infrastructure Signal Layer</span>
+                <span><span className="dot" style={{ background: 'var(--rose)', boxShadow: '0 0 10px var(--rose)' }}></span> Infrastructure Signal Layer</span>
                 <span>transparency</span>
               </div>
 
               <div 
-                className={`layer layer-3`}
+                className="layer layer-3"
                 style={{ 
-                  borderColor: activeGovLayer === 3 ? '#ffffff' : 'var(--glass-border)',
-                  boxShadow: activeGovLayer === 3 ? '0 0 20px rgba(255, 255, 255, 0.2)' : '0 20px 40px -14px rgba(0,0,0,0.5)'
+                  borderColor: activeGovLayer === 3 ? 'var(--mint)' : 'var(--glass-border)',
+                  boxShadow: activeGovLayer === 3 ? '0 0 24px rgba(110, 231, 183, 0.2)' : 'var(--shadow-soft)'
                 }}
                 onClick={() => setActiveGovLayer(3)}
               >
-                <span><span className="dot" style={{ background: '#ffffff', boxShadow: '0 0 8px #ffffff' }}></span> Resident &amp; Sensor Input Layer</span>
+                <span><span className="dot" style={{ background: 'var(--mint)', boxShadow: '0 0 10px var(--mint)' }}></span> Resident &amp; Sensor Input Layer</span>
                 <span>privacy first</span>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Conclusion Panel */}
-        <div className="section-header">
+        {/* ═══ CONCLUSION ═══ */}
+        <div className="section-header reveal">
           <div className="section-label">06 // Synthesis</div>
-          <h2 class="section-title">Conclusion: Smarter vs. More Efficient</h2>
+          <h2 className="section-title">Conclusion: Smarter vs. More Efficient</h2>
         </div>
 
-        <div className="conclusion-panel">
+        <div className="conclusion-panel reveal">
           <div className="conclusion-content">
             <p>As we stand at the precipice of spatial and ambient computing, a critical question emerges: <strong>Does artificial intelligence make cities smarter, or does it simply make them more efficient?</strong></p>
             <p>The distinction is profound. Efficiency is transactional; it is about optimizing resource usage—reducing bus delays, lowering electricity bills, routing sanitation trucks via the shortest paths. Efficiency asks: <em>"How do we do this faster and cheaper?"</em></p>
@@ -948,12 +994,12 @@ export default function App() {
               </div>
               <div className="toggle-result">
                 {reflectionFocus === 'efficient' ? (
-                  <span style={{ color: 'var(--amber)' }}>
+                  <span style={{ color: 'var(--peach)' }}>
                     <strong>Priority:</strong> Maximize speed, cost-reductions, and algorithmic optimization. <br />
                     <strong>Risk:</strong> Risk of surveillance states, digital exclusion, and treating citizens as numbers.
                   </span>
                 ) : (
-                  <span style={{ color: 'var(--cyan)' }}>
+                  <span style={{ color: 'var(--lavender)' }}>
                     <strong>Priority:</strong> Maximize public equity, digital rights, and democratic voice. <br />
                     <strong>Reward:</strong> Authentic civic intelligence, resilient infrastructure, and inclusive governance.
                   </span>
